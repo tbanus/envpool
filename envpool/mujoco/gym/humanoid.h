@@ -31,10 +31,11 @@
 // #include <Math/orientation_tools.h>
 // #include <eigen3/Eigen/Dense>
 #include <RobotController.h>
-// #include <legged-sim/include/Controllers/EmbeddedController.hpp>
-#include <Controllers/EmbeddedController.hpp>
+// #include <opy-software/include/Controllers/EmbeddedController.hpp>
+#include <MIT_Controller.hpp>
 // #include "Utilities/PeriodicTask.h"
-#include <Utilities/RobotCommands.h>
+// #include <Utilities/RobotCommands.h>
+#include <MotorCMD.h>
 #include  <eigen3/Eigen/Dense>
 
 namespace mujoco_gym {
@@ -88,9 +89,9 @@ class HumanoidEnv : public Env<HumanoidEnvSpec>, public MujocoEnv {
 	mjtNum contact_cost_weight_, contact_cost_max_;
 	std::uniform_real_distribution<> dist_;
 	RobotRunner* _robotRunner;
-	SpiCommand* _Command;
-	SpiData* _Feedback;
-	VectorNavData* _ImuData;
+  CANcommand* _Command;
+	CANData* _Feedback;
+	IMUData* _ImuData;
 	GamepadCommand* _GamepadCommand;
 	RobotController* ctrl;
 	RobotControlParameters* _robotParams;
@@ -103,7 +104,7 @@ class HumanoidEnv : public Env<HumanoidEnvSpec>, public MujocoEnv {
       : Env<HumanoidEnvSpec>(spec, env_id),
         // MujocoEnv(spec.config["base_path"_] +
         // "/mujoco/assets_gym/humanoid.xml",
-        MujocoEnv(std::string("/home/banus/thesis-project/legged-sim/resource/"
+        MujocoEnv(std::string("/home/banus/thesis-project/opy-software/resource/"
                               "opy_v05/opy_v05.xml"),
                   spec.config["frame_skip"_], spec.config["post_constraint"_],
                   spec.config["max_episode_steps"_]),
@@ -119,27 +120,27 @@ class HumanoidEnv : public Env<HumanoidEnvSpec>, public MujocoEnv {
         contact_cost_max_(spec.config["contact_cost_max"_]),
         dist_(-spec.config["reset_noise_scale"_],
               spec.config["reset_noise_scale"_]) {
-    EmbeddedController robot_ctrl; 
-    _Command = new SpiCommand();
-    _Feedback = new SpiData();
-    _ImuData = new VectorNavData();
+    MIT_Controller robot_ctrl; 
+    _Command = new CANcommand();
+    _Feedback = new CANData();
+    _ImuData = new IMUData();
     _GamepadCommand = new GamepadCommand();
     _robotParams = new RobotControlParameters();
     taskManager = new PeriodicTaskManager();
 
     ctrl = &robot_ctrl;
 
-    _robotRunner = new RobotRunner(ctrl, taskManager, 0.002, "robot-control");
+    _robotRunner = new RobotRunner(ctrl, taskManager, 0.002, "robot-control",30);
     _robotRunner->driverCommand = _GamepadCommand;
-    _robotRunner->_ImuData = _ImuData;
-    _robotRunner->_Feedback = _Feedback;
-    _robotRunner->_Command = _Command;
+    _robotRunner->vectorNavData = _ImuData;
+    _robotRunner->_CANData = _Feedback;
+    _robotRunner->_CANcommand = _Command;
     _robotRunner->controlParameters = _robotParams;
-    _robotRunner->initializeParameters();
+    // _robotRunner->initializeParameters();
     _robotRunner->init();
-    ctrl->_controlFSM->data.controlParameters->control_mode=1;
+    // ctrl->_controlFSM->data.controlParameters->control_mode=1;
 
-    std::cout<<(ctrl->_controlFSM->currentState->stateName==FSM_StateName::PASSIVE)<<std::endl;
+    // std::cout<<(ctrl->_controlFSM->currentState->stateName==FSM_StateName::PASSIVE)<<std::endl;
 
     std::string fname;
     fname = "/home/banus/thesis-project/envpool/logs/" + std::to_string(env_id_) + "_log.csv";
@@ -177,9 +178,9 @@ for(int i=0;i<3; i++)
     printf("Reset\n");
     MujocoReset();
 
-    _Command = new SpiCommand();
-    _Feedback = new SpiData();
-    _ImuData = new VectorNavData();
+    _Command = new CANcommand();
+    _Feedback = new CANData();
+    _ImuData = new IMUData();
     _GamepadCommand = new GamepadCommand();
         _robotParams = new RobotControlParameters();
       taskManager = new PeriodicTaskManager();
@@ -187,17 +188,17 @@ for(int i=0;i<3; i++)
     WriteState(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
 
 
-    ctrl = new EmbeddedController();
+    ctrl = new MIT_Controller();
 
-    _robotRunner = new RobotRunner(ctrl, taskManager, 0.002, "robot-control");
+    _robotRunner = new RobotRunner(ctrl, taskManager, 0.002, "robot-control",25);
     _robotRunner->driverCommand = _GamepadCommand;
-    _robotRunner->_ImuData = _ImuData;
-    _robotRunner->_Feedback = _Feedback;
-    _robotRunner->_Command = _Command;
+    _robotRunner->vectorNavData = _ImuData;
+    _robotRunner->_CANData = _Feedback;
+    _robotRunner->_CANcommand = _Command;
     _robotRunner->controlParameters = _robotParams;
-    _robotRunner->initializeParameters();
+    // _robotRunner->initializeParameters();
     _robotRunner->init();
-    ctrl->_controlFSM->data.controlParameters->control_mode=1;
+    // ctrl->_controlFSM->data.controlParameters->control_mode=1;
 
     done_ = false;
     elapsed_step_ = 0;
@@ -266,7 +267,7 @@ for(int i=0;i<3; i++)
 
  private:
   bool IsHealthy() {
-    if(ctrl->_controlFSM->data.controlParameters->control_mode==0) return false; // end if state is passive
+    // if(ctrl->_controlFSM->data.controlParameters->control_mode==0) return false; // end if state is passive
 
     
     return healthy_z_min_ < data_->qpos[2] && data_->qpos[2] < healthy_z_max_;
@@ -335,9 +336,9 @@ for(int i=0;i<3; i++)
     _ImuData->acc_y = data_->sensordata[1];
     _ImuData->acc_z = data_->sensordata[2];
 
-    _ImuData->accelerometer[0] = data_->sensordata[0];
-    _ImuData->accelerometer[1] = data_->sensordata[1];
-    _ImuData->accelerometer[2] = data_->sensordata[2];
+    // _ImuData->accelerometer[0] = data_->sensordata[0];
+    // _ImuData->accelerometer[1] = data_->sensordata[1];
+    // _ImuData->accelerometer[2] = data_->sensordata[2];
 
     _ImuData->heave = data_->qvel[0] ;
     _ImuData->heave_dt = data_->qvel[1] ;
@@ -348,9 +349,9 @@ for(int i=0;i<3; i++)
     _ImuData->gyr_y = data_->qvel[4];
     _ImuData->gyr_z = data_->qvel[5];
 
-    _ImuData->gyro[0] = data_->qvel[3];
-    _ImuData->gyro[1] = data_->qvel[4];
-    _ImuData->gyro[2] = data_->qvel[5];
+    // _ImuData->gyro[0] = data_->qvel[3];
+    // _ImuData->gyro[1] = data_->qvel[4];
+    // _ImuData->gyro[2] = data_->qvel[5];
 
     _ImuData->quat[0] = data_->qpos[3];
     _ImuData->quat[1] = data_->qpos[4];

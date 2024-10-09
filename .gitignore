@@ -148,6 +148,6 @@ log
 _vizdoom*
 MUJOCO_LOG.TXT
 .vscode/
-envpool/mujoco/legged-sim/
+envpool/mujoco/opy-software/
 logs/**
-/envpool/mujoco/legged-sim
+/envpool/mujoco/opy-software
