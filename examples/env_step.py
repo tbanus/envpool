@@ -21,25 +21,41 @@ import envpool
 is_legacy_gym = version.parse(gym.__version__) < version.parse("0.26.0")
 
 
-def gym_sync_step() -> None:
+def gym_sync_step(debug=False) -> None:
   num_envs = 1
+  if debug:
+     print("[DEBUG] Number of environments:", num_envs)
   env = envpool.make_gym("Humanoid-v4", num_envs=num_envs)
+  if debug:
+      print("[DEBUG] Created environment with num_envs:", num_envs)
+
   action_num = env.action_space.shape[0]
+  if debug:
+      print("[DEBUG] Action space shape:", action_num)
+
   # if is_legacy_gym:
   #   obs = env.reset()  # reset all envs
   # else:
   #   obs, _ = env.reset()  # reset all envs
   # assert obs.shape == (num_envs, 4, 84, 84)
+
   for _ in range(1400):
-  
-    # autoreset is automatically enabled in envpool
-    action = np.random.randint(action_num, size=(num_envs, action_num))
-    # result = env.step(action)
-    if is_legacy_gym:
-      obs, rew, done, info = env.step(action)
-    else:
-      obs, rew, term, trunc, info = env.step(action)
-    # print("obs", obs)
+      # autoreset is automatically enabled in envpool
+      action = np.random.randint(action_num, size=(num_envs, action_num))
+      if debug:
+          print("[DEBUG] Generated action:", action)
+
+      # result = env.step(action)
+      if is_legacy_gym:
+          obs, rew, done, info = env.step(action)
+          if debug:
+              print("[DEBUG] Step result (legacy): obs, rew, done, info", obs, rew, done, info)
+      else:
+          obs, rew, term, trunc, info = env.step(action)
+          if debug:
+              print("[DEBUG] Step result: obs, rew, term, trunc, info", obs, rew, term, trunc, info)
+
+      # print("obs", obs)
       # print(f"obs, rew, term, trunc, info {obs.shape, rew, term, trunc, info}")
 
   # Of course, you can specify env_id to step corresponding envs
@@ -48,8 +64,15 @@ def gym_sync_step() -> None:
   # else:
   #   obs, _ = env.reset(np.array([1, 3]))  # reset env #1 and #3
   # assert obs.shape == (2, 4, 84, 84)
+
   partial_action = np.array([0, 0, 2])
+  if debug:
+      print("[DEBUG] Partial action:", partial_action)
+
   env_id = np.array([3, 2, 0])
+  if debug:
+      print("[DEBUG] Env ID:", env_id)
+
   # result = env.step(partial_action, env_id)
   # obs, info = result[0], result[-1]
   # np.testing.assert_allclose(info["env_id"], env_id)

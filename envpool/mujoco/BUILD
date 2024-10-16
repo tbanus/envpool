@@ -44,7 +44,7 @@ cc_library(
         "opy-software/**/*.h",
         "opy-software/**/*.hh",
         "opy-software/**/*.hpp",
-        # "opy-software/**/*.cpp",
+        "opy-software/**/*.cpp",
         "opy-software/**/*.ipp",
         "gym/ant.h",
         "gym/half_cheetah.h",
@@ -67,6 +67,7 @@ cc_library(
         "opy-software/include/Dynamics",
         "opy-software/include/Controllers",
         "opy-software/include/convexMPC",
+        "opy-software/include/motor_driver",
         "opy-software/third_party",
         # "opy-software/third_party/osqp",
         # "opy-software/third_party/osqp/include",
@@ -90,16 +91,18 @@ cc_library(
         
     ],
     srcs = glob([  
-    # "opy-software/src/**/*.cpp",
-    # "opy-software/src/FSM/*.cpp",
-    # "opy-software/src/*.cpp",
-    # "opy-software/src/Utilities/*.cpp",
+    "opy-software/src/**/*.cpp",
+    "opy-software/src/FSM/*.cpp",
+    "opy-software/src/*.cpp",
+    "opy-software/src/Utilities/*.cpp",
 
     "opy-software/third_party/ParamHandler/**/*.cpp",
     "opy-software/third_party/qpOASES/**/*.hpp",
     "opy-software/third_party/qpOASES/**/*.ipp",
     "opy-software/third_party/Goldfarb_Optimizer/**/*.cpp",
     "opy-software/third_party/Goldfarb_Optimizer/**/*.cc",
+        # "opy-software/third_party/vn100/**/*.cpp",
+
     "opy-software/third_party/ParamHandler/**/*.cpp",
     "opy-software/third_party/qpOASES/**/*.cpp",
     "opy-software/third_party/Goldfarb_Optimizer/**/*.cpp",
@@ -174,7 +177,7 @@ cc_library(
              "opy-software/src/Controllers/Gait.cpp",
              "opy-software/src/Controllers/ContactKalman.cpp",
              "opy-software/src/Solo12MB_Ctrl.cpp",
-            "opy-software/include/third_party/Goldfarb_Optimizer/QuadProg++.cc"
+            # "opy-software/include/third_party/Goldfarb_Optimizer/QuadProg++.cc"
             
         ]),
     
@@ -186,8 +189,8 @@ cc_library(
         "@mujoco//:mujoco_lib",
 
     ],
-    linkopts = ["-ltinyxml2 -lpthread  -usr/local/lib/libosqp.so -usr/local/lib/libqdldl.so -usr/local/lib/libqpOASES.so"], 
-    copts = ["-DHW_ENABLE=1 -DOPYv05=1 -O3 -ggdb -w  -D__NO_COPYRIGHT__ -Wno-error  -Wall -pedantic -Wfloat-equal -Wshadow -DLINUX -finline-functions"],
+    linkopts = ["-ltinyxml2 -usr/local/lib/libosqp.so -usr/local/lib/libqdldl.so -usr/local/lib/libqpOASES.so"], 
+    copts = ["-DHW_ENABLE=ON -D OPYv05=1 -O3 -ggdb -w  -D__NO_COPYRIGHT__ -Wno-error  -Wall -pedantic -Wfloat-equal -Wshadow -DLINUX -finline-functions"],
 )
 # -no-pie 
 pybind_extension(

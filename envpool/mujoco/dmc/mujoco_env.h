@@ -25,6 +25,7 @@
 #include <string>
 
 #include "envpool/mujoco/dmc/utils.h"
+#include <array>
 
 namespace mujoco_dmc {
 
